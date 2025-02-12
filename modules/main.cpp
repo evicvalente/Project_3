@@ -1,15 +1,12 @@
 //=====[Libraries]=============================================================
-
 #include "mbed.h"
 #include "arm_book_lib.h"
-#include "entryway_light.h"
-#include "light_sensor.h"
+#include "ignition.h"  // Only the ignition module is needed now
 
 //=====[Defines]===============================================================
-#define POTENTIOMETER_OVER_TEMP_LEVEL            50
+#define POTENTIOMETER_OVER_TEMP_LEVEL 50
 
 //=====[Declaration and initialization of public global objects]===============
-
 DigitalIn driverSeat(D2);
 DigitalIn passengerSeat(D3);
 DigitalIn driverBelt(D4);
@@ -18,9 +15,8 @@ DigitalIn ignitionButton(BUTTON1);
 
 DigitalOut ignitionEnabledLED(LED1);
 DigitalOut engineLED(LED2);
-DigitalOut leftBeamLamp(A3);
-DigitalOut rightBeamLamp(A4);
 
+// If these analog or digital objects are not used elsewhere, you might remove them too.
 AnalogIn potentiometer(A0);
 
 DigitalInOut sirenPin(PE_10);
@@ -28,42 +24,36 @@ DigitalInOut sirenPin(PE_10);
 UnbufferedSerial uartUsb(USBTX, USBRX, 115200);
 
 //=====[Declaration and initialization of public global variables]=============
-
-bool driverState = OFF;
-bool engineState = OFF; 
-bool alarmON = OFF;
-bool endPrint = OFF; 
-bool tryAgain = OFF; 
-bool engineOn = OFF;
-bool ignitionLEDState = OFF; 
+bool driverState      = OFF;
+bool engineState      = OFF; 
+bool alarmON          = OFF;
+bool endPrint         = OFF; 
+bool tryAgain         = OFF; 
+bool engineOn         = OFF;
+bool ignitionLEDState = OFF;
 
 float potentiometerReading = 0.0;
 
 //=====[Declarations (prototypes) of public functions]=========================
-
 void inputsInit();
 void outputsInit();
 void uartTask();
-void ledActivation();
-void lightBeamActivation();
 float convertAnalog(float analogReading);
 
 //=====[Main function, the program entry point after power on or reset]========
-
 int main()
 {
     inputsInit();
     outputsInit();
-    brightnessSensorInit();
+    // Removed brightnessSensorInit() because it's part of entryway_light
+
     while (true) {
         uartTask();
-        ledActivation();
-        lightBeamActivation();
+        ignitionTask();  // Handles the ignition logic
     }
 }
 
 //=====[Implementations of public functions]===================================
-
 void inputsInit()
 {
     driverSeat.mode(PullDown);
@@ -71,6 +61,7 @@ void inputsInit()
     driverBelt.mode(PullDown);
     passengerBelt.mode(PullDown);
     ignitionButton.mode(PullDown);
+    
     sirenPin.mode(OpenDrain);
     sirenPin.input();
 }
@@ -81,67 +72,21 @@ void outputsInit()
     engineLED = OFF;
 }
 
-void ledActivation() {
-//turns ignition LED on if everything is satisfied
-    if ( driverSeat && passengerSeat && driverBelt && passengerBelt ) {
-        ignitionEnabledLED = ON;
-    }
-
-//if ignitionEnabledLED is ON and ignition button is pressed, turn blue led on. 
-    if (ignitionEnabledLED && ignitionButton) {
-        engineLED = ON;
-        engineState = ON;
-        ignitionEnabledLED = OFF;
-        ignitionLEDState = ON;
-    }
-
-//if engineLED is on, turn this variable around
-    if (engineLED){
-        engineOn = ON; 
-        ignitionLEDState = ON;
-        sirenPin.input(); 
-    }
-
-//if both LEDs are off and ignition button is pushed, turn buzzer on. 
-    if (!ignitionEnabledLED && ignitionButton && alarmON == OFF && !ignitionLEDState) {
-        sirenPin.output();
-        sirenPin = LOW;
-        alarmON = ON;
-    }
-}
-
-void lightBeamActivation(){
-    potentiometerReading = potentiometer.read();
-    if (engineLED && potentiometerReading<0.3){
-        leftBeamLamp = HIGH;
-        rightBeamLamp = HIGH;
-    }
-
-    if (engineLED && potentiometerReading>0.3 && potentiometer.read()<0.6){
-        leftBeamLamp = LOW;
-        rightBeamLamp = LOW;
-    }
-    
-    if (engineLED && potentiometerReading>0.3 && potentiometer.read()>0.6){
-        lightUpdated();    
-        }  
-}
-
-
-void uartTask(){
-    if ( driverState == OFF && driverSeat ) {
+void uartTask()
+{
+    if (driverState == OFF && driverSeat) {
         driverState = ON; 
-        uartUsb.write( "Welcome to enhanced alarm system model 218-W24\r\n", 48 );
+        uartUsb.write("Welcome to enhanced alarm system model 218-W24\r\n", 48);
     }	
 
-    if (ignitionEnabledLED == OFF && engineState ){
+    if (ignitionEnabledLED == OFF && engineState) {
         engineState = OFF; 
-        uartUsb.write( "Engine started\r\n", 16 );
+        uartUsb.write("Engine started\r\n", 16);
         tryAgain = ON;
     }
 
-    if (alarmON == ON && ignitionButton == ON && !endPrint){
-        alarmON == OFF;
+    if (alarmON == ON && ignitionButton == ON && !endPrint) {
+        alarmON = OFF;  // Corrected assignment from 'alarmON == OFF'
         uartUsb.write("Ignition inhibited\r\n", 20);
 
         if (driverSeat == OFF) {
@@ -162,10 +107,9 @@ void uartTask(){
         endPrint = true;
         uartUsb.write("Try again!\r\n", 12);
     }
-
 }
 
-float convertAnalog( float analogReading )
+float convertAnalog(float analogReading)
 {
-    return ( analogReading * 3.3 / 0.01 );
+    return (analogReading * 3.3 / 0.01);
 }
