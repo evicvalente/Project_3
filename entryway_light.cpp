@@ -10,7 +10,7 @@
 
 //=====[Declaration and initialization of public global objects]===============
 
-DigitalOut brightnessSensor(LED1);
+DigitalOut brightnessSensor(LED1); // test changes!!!!!
 DigitalOut leftBeamLamp2(A3);
 DigitalOut rightBeamLamp2(A4);
 
