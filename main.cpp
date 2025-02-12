@@ -6,7 +6,7 @@
 #include "light_sensor.h"
 
 //=====[Defines]===============================================================
-#define POTENTIOMETER_OVER_TEMP_LEVEL            50
+
 
 //=====[Declaration and initialization of public global objects]===============
 
@@ -18,8 +18,7 @@ DigitalIn ignitionButton(BUTTON1);
 
 DigitalOut ignitionEnabledLED(LED1);
 DigitalOut engineLED(LED2);
-DigitalOut leftBeamLamp(A3);
-DigitalOut rightBeamLamp(A4);
+
 
 AnalogIn potentiometer(A0);
 
@@ -45,8 +44,7 @@ void inputsInit();
 void outputsInit();
 void uartTask();
 void ledActivation();
-void lightBeamActivation();
-float convertAnalog(float analogReading);
+
 
 //=====[Main function, the program entry point after power on or reset]========
 
@@ -54,11 +52,11 @@ int main()
 {
     inputsInit();
     outputsInit();
-    brightnessSensorInit();
+    //brightnessSensorInit();
     while (true) {
         uartTask();
         ledActivation();
-        lightBeamActivation();
+        //lightBeamActivation();
     }
 }
 
@@ -82,12 +80,12 @@ void outputsInit()
 }
 
 void ledActivation() {
-//turns ignition LED on if everything is satisfied
+
     if ( driverSeat && passengerSeat && driverBelt && passengerBelt ) {
         ignitionEnabledLED = ON;
     }
 
-//if ignitionEnabledLED is ON and ignition button is pressed, turn blue led on. 
+
     if (ignitionEnabledLED && ignitionButton) {
         engineLED = ON;
         engineState = ON;
@@ -95,14 +93,14 @@ void ledActivation() {
         ignitionLEDState = ON;
     }
 
-//if engineLED is on, turn this variable around
+
     if (engineLED){
         engineOn = ON; 
         ignitionLEDState = ON;
         sirenPin.input(); 
     }
 
-//if both LEDs are off and ignition button is pushed, turn buzzer on. 
+
     if (!ignitionEnabledLED && ignitionButton && alarmON == OFF && !ignitionLEDState) {
         sirenPin.output();
         sirenPin = LOW;
@@ -165,7 +163,4 @@ void uartTask(){
 
 }
 
-float convertAnalog( float analogReading )
-{
-    return ( analogReading * 3.3 / 0.01 );
-}
+
