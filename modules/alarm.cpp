@@ -34,4 +34,3 @@ void alarmTask(void)
 
 //=====[Implementations of private functions]==================================
 // (None)
-
