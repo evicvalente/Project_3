@@ -64,3 +64,8 @@ void ignitionTask(void)
 
 //=====[Implementations of private functions]==================================
 // (No private functions)
+
+void checkenginestate()
+{
+    return engineOn
+}
