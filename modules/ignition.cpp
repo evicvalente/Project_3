@@ -2,6 +2,7 @@
 #include "ignition.h"
 #include "mbed.h"
 #include "arm_book_lib.h"
+#include "globals.h"
 
 //=====[Declaration of private defines]========================================
 // (No private defines for ignition)
@@ -13,12 +14,7 @@
 // (No new public global objects in this module)
 
 //=====[Declaration of external public global variables]=======================
-// Note: The ignition logic uses the following globals defined in main.cpp:
-//   DigitalIn driverSeat, passengerSeat, driverBelt, passengerBelt, ignitionButton;
-//   DigitalOut ignitionEnabledLED, engineLED;
-//   bool engineState, ignitionLEDState, engineOn, alarmON;
-//   DigitalInOut sirenPin;
-// These must remain declared in main.cpp (or in a shared header) for this module to work.
+// (None)
 
 //=====[Declaration and initialization of public global variables]=============
 // (None)
