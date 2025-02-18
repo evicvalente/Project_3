@@ -10,10 +10,7 @@
 // (No ignition-specific data types)
 
 //=====[Declarations (prototypes) of public functions]=========================
-void updateWiperSetting();
-void updateIntSpeed();
-void moveServoSmoothly(float targetPosition, int speedDelay);
-void servo_move();
+void ignitionTask(void);
 
 //=====[#include guards - end]=================================================
 
