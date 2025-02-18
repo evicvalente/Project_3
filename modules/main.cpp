@@ -4,7 +4,8 @@
 #include "ignition.h"
 #include "alarm.h" 
 #include "display.h"
-#include "globals.h"  // Contains extern declarations for our globals
+#include "user_interface.h"
+#include "globals.h"
 
 //=====[Defines]===============================================================
 #define POTENTIOMETER_OVER_TEMP_LEVEL 50
@@ -20,12 +21,14 @@ int main()
 {
     inputsInit();
     outputsInit();
-    displayInit(); // Initialize the 2x20 display
+    displayInit();          // Initialize the 2x20 display
+    userInterfaceInit();    // Initialize the user interface module
 
     while (true) {
         uartTask();
         alarmTask();    
         ignitionTask();
+        userInterfaceUpdate();  // Update the user interface (wiper mode and delay)
     }
 }
 
@@ -69,3 +72,4 @@ float convertAnalog(float analogReading)
 {
     return (analogReading * 3.3 / 0.01);
 }
+
