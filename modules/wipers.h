@@ -8,9 +8,10 @@
 //=====[Declaration of public data types]======================================
 
 //=====[Declarations (prototypes) of public functions]=========================
-void change_wiper_state();
-
-
+void updateWiperSetting();
+void updateIntSpeed();
+void moveServoSmoothly(float targetPosition, int speedDelay);
+void servo_move();
 //=====[#include guards - end]=================================================
 
 #endif // wipers_h
