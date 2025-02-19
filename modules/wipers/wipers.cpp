@@ -2,32 +2,37 @@
 #include "mbed.h"
 #include "arm_book_lib.h"
 #include "ignition.h"
-#include <ctime>
+#include "user_interface.h"  // For getWiperMode() and getDelaySetting()
+#include "globals.h"
+#include <cmath>             // For fabs()
+#include "ThisThread.h"
+#include <chrono>
+using namespace std::chrono;
+
+//---- Macro to provide wait_ms() functionality ----
+#define wait_ms(x) ThisThread::sleep_for(milliseconds(x))
 
 //=====[Declaration of private defines]========================================
-#define DUTY_MIN 0.025
-#define DUTY_MAX 0.098
+#define DUTY_MIN 0.025f
+#define DUTY_MAX 0.098f
 
-//=====[Declaration and initialization of public global objects]===============
+//=====[Declaration and initialization of public global objects]=============
 PwmOut servo(PF_9);
-AnalogIn wiper_potentiometer1(A0);
-AnalogIn wiper_potentiometer2(A1);
 
 //=====[Enumerations]==========================================================
-
-// Makes states for each of the wiper settings
+// Enumerated wiper settings
 enum wipersetting {
     wiper_Off,
-    wiper_Hi,
     wiper_Low,
+    wiper_Hi,
     wiper_Int,
 };
 
-// Makes states for the int mode delays 
+// Enumerated intermittent mode delays (in milliseconds)
 enum IntMode {
-    slow = 8000,
+    slow   = 8000,
     medium = 6000,
-    fast = 3000,
+    fast   = 3000,
 };
 
 //=====[Declaration and initialization of public global variables]=============
@@ -35,30 +40,62 @@ wipersetting currentWiperSetting = wiper_Off;
 int intDelay = slow;
 float currentServoPosition = DUTY_MIN;
 
+//=====[Custom String Compare Function]======================================
+
+/**
+ * @brief Compares two null-terminated strings.
+ *
+ * @param s1 First string.
+ * @param s2 Second string.
+ * @return An integer less than, equal to, or greater than zero if s1 is found,
+ *         respectively, to be less than, to match, or be greater than s2.
+ */
+static int my_strcmp(const char* s1, const char* s2) {
+    while (*s1 && (*s1 == *s2)) {
+         s1++;
+         s2++;
+    }
+    return *(const unsigned char*)s1 - *(const unsigned char*)s2;
+}
+
 //=====[Function Prototypes]===================================================
 void updateWiperSetting();
 void updateIntSpeed();
 void moveServoSmoothly(float targetPosition, int speedDelay);
 void servo_move();
+void wipersTask();
 
 //=====[Implementations of public functions]===================================
 
+/**
+ * @brief Gradually moves the servo from the current position toward the target position.
+ *
+ * @param targetPosition The desired servo duty cycle.
+ * @param speedDelay Delay (in ms) between steps.
+ */
 void moveServoSmoothly(float targetPosition, int speedDelay) {
-    while (currentServoPosition != targetPosition) {
-        currentServoPosition += (targetPosition > currentServoPosition);
+    // Adjust in small steps until within a tolerance of 0.001
+    while (fabs(currentServoPosition - targetPosition) > 0.001f) {
+        if (targetPosition > currentServoPosition)
+            currentServoPosition += 0.001f;
+        else
+            currentServoPosition -= 0.001f;
         servo = currentServoPosition;
-        sleep_for(speedDelay);
-
+        wait_ms(speedDelay);
     }
 }
 
-
-
+/**
+ * @brief Moves the servo based on the current wiper setting.
+ */
 void servo_move() {
-    if (checkenginestate() == OFF) {
+    // Use engineState (from globals.h) to determine if the engine is running.
+    // If the engine is off, force the wipers off.
+    if (engineState == OFF) {
         servo = DUTY_MIN;
         return;
-
+    }
+    
     switch (currentWiperSetting) {
         case wiper_Off:
             servo = DUTY_MIN;
@@ -68,54 +105,72 @@ void servo_move() {
             moveServoSmoothly(DUTY_MAX, 5);
             moveServoSmoothly(DUTY_MIN, 5);
             break;
-
+        
         case wiper_Low:
             moveServoSmoothly(DUTY_MAX, 15);
             moveServoSmoothly(DUTY_MIN, 15);
             break;
-
+        
         case wiper_Int:
             moveServoSmoothly(DUTY_MAX, 5);
-            sleep_for(intDelay);
+            wait_ms(intDelay);
             moveServoSmoothly(DUTY_MIN, 10);
-            sleep_for(intDelay);
+            wait_ms(intDelay);
             break;
     }
 }
 
+/**
+ * @brief Updates the wiper setting by reading the current mode from the user interface.
+ */
 void updateWiperSetting() {
-    if (checkenginestate() == OFF) {
+    // If the engine is off, force the wiper setting to off.
+    if (engineState == OFF) {
         currentWiperSetting = wiper_Off;
         return;
     }
-
-    float potValue1 = wiper_potentiometer1.read();
-
-    if (potValue1 < 0.25) {
+    
+    // Get the current mode from the user interface module.
+    const char* modeStr = getWiperMode();
+    
+    if (my_strcmp(modeStr, "OFF") == 0) {
         currentWiperSetting = wiper_Off;
-    }
-    if (potValue1 < 0.5) {
+    } else if (my_strcmp(modeStr, "LO") == 0) {
         currentWiperSetting = wiper_Low;
-    }
-    if (potValue1 < 0.75) {
+    } else if (my_strcmp(modeStr, "HI") == 0) {
         currentWiperSetting = wiper_Hi;
-    }
-    else {
+    } else if (my_strcmp(modeStr, "INT") == 0) {
         currentWiperSetting = wiper_Int;
     }
+    
+    // Once the setting is updated, perform the servo movement.
     servo_move();
 }
 
+/**
+ * @brief Updates the intermittent mode delay by reading the current delay setting from the user interface.
+ */
 void updateIntSpeed() {
-    float potValue2 = wiper_potentiometer2.read()
-
-    if (potValue2 < 0.33) {
+    // Only update delay if the current mode is intermittent.
+    if (currentWiperSetting != wiper_Int) return;
+    
+    const char* delayStr = getDelaySetting();
+    
+    if (my_strcmp(delayStr, "SHORT") == 0) {
         intDelay = slow;
-    }
-    if (potValue2 < 0.66) {
+    } else if (my_strcmp(delayStr, "MEDIUM") == 0) {
         intDelay = medium;
-    }
-    else {
+    } else if (my_strcmp(delayStr, "LONG") == 0) {
         intDelay = fast;
     }
+}
+
+/**
+ * @brief Top-level function to update the wiper system.
+ *
+ * Call this function periodically from your main loop.
+ */
+void wipersTask() {
+    updateIntSpeed();
+    updateWiperSetting();
 }
