@@ -13,6 +13,8 @@ void updateIntSpeed();
 void moveServoSmoothly(float targetPosition, int speedDelay);
 void servo_move();
 void wipersTask();
+
+void wipersInit(void);
 //=====[#include guards - end]=================================================
 
 #endif // wipers_h
