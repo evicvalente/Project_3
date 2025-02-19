@@ -2,10 +2,10 @@
 #include "arm_book_lib.h"
 
 // Digital inputs
-DigitalIn driverSeat(D2);
-DigitalIn passengerSeat(D3);
-DigitalIn driverBelt(D4);
-DigitalIn passengerBelt(D5);
+DigitalIn driverSeat(D12);
+DigitalIn passengerSeat(D13);
+DigitalIn driverBelt(D10);
+DigitalIn passengerBelt(D11);
 DigitalIn ignitionButton(BUTTON1);
 
 // Digital outputs
@@ -13,7 +13,8 @@ DigitalOut ignitionEnabledLED(LED1);
 DigitalOut engineLED(LED2);
 
 // Analog input
-AnalogIn potentiometer(A0);
+AnalogIn potentiometer1(A0);
+AnalogIn potentiometer2(A1);
 
 // Digital in/out
 DigitalInOut sirenPin(PE_10);
