@@ -6,6 +6,7 @@
 #include "display.h"
 #include "user_interface.h"
 #include "globals.h"
+#include "wipers.h"
 
 //=====[Defines]===============================================================
 #define POTENTIOMETER_OVER_TEMP_LEVEL 50
@@ -29,6 +30,7 @@ int main()
         alarmTask();    
         ignitionTask();
         userInterfaceUpdate();  // Update the user interface (wiper mode and delay)
+        wipersTask();
     }
 }
 
