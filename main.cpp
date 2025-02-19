@@ -24,13 +24,14 @@ int main()
     outputsInit();
     displayInit();          // Initialize the 2x20 display
     userInterfaceInit();    // Initialize the user interface module
+    wipersInit();           // Initialize the wiper module (start servoTimer)
 
     while (true) {
         uartTask();
         alarmTask();    
         ignitionTask();
         userInterfaceUpdate();  // Update the user interface (wiper mode and delay)
-        wipersTask();
+        wipersTask();           // Non-blocking wiper update
     }
 }
 
