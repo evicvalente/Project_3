@@ -14,7 +14,7 @@ DigitalOut engineLED(LED2);
 
 // Analog input
 AnalogIn potentiometer1(A0);
-AnalogIn potentiometer2(A1);
+AnalogIn delaySelector(A1);
 
 // Digital in/out
 DigitalInOut sirenPin(PE_10);

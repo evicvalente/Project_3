@@ -57,19 +57,30 @@ void outputsInit()
     engineLED = OFF;
 }
 
-void uartTask()
-{
-    if (driverState == OFF && driverSeat) {
-        driverState = ON; 
-        uartUsb.write("Welcome to enhanced alarm system model 218-W24\r\n", 48);
-    }	
+void uartTask() {
+    static bool welcomeDisplayed = false;
+    static bool engineStartedDisplayed = false;
 
-    if (ignitionEnabledLED == OFF && engineState) {
-        engineState = OFF; 
+    // Display welcome message once when driver sits down.
+    if (!welcomeDisplayed && driverState == OFF && driverSeat) {
+        driverState = ON;
+        uartUsb.write("Welcome to enhanced alarm system model 218-W25\r\n", 48);
+        welcomeDisplayed = true;
+    }
+
+    // When the engine is running, display "Engine started" only once.
+    if (!engineStartedDisplayed && engineState == ON) {
         uartUsb.write("Engine started\r\n", 16);
+        engineStartedDisplayed = true;
         tryAgain = ON;
     }
+
+    // Reset the engine started flag if engine is off.
+    if (engineState == OFF) {
+        engineStartedDisplayed = false;
+    }
 }
+
 
 float convertAnalog(float analogReading)
 {
