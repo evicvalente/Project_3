@@ -16,3 +16,5 @@ range of motion needed for a windshiled wiper. Furthermore with a positional ser
 only had to modify the pulse width modulation delays to a desired increment. This allowed for an easy distinction in motor speeds for the different wiper modes.
 
 ### Summery of Testing Results:
+<img width="736" alt="Screenshot 2025-02-20 at 1 30 53 AM" src="https://github.com/user-attachments/assets/9c8f08cf-f138-4bad-820f-d8f9b3062791" />
+<img width="712" alt="Screenshot 2025-02-20 at 1 33 37 AM" src="https://github.com/user-attachments/assets/9478c0dc-4aa1-41c9-8344-94fb4a018ffe" />
