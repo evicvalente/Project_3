@@ -28,35 +28,60 @@
 //=====[Implementations of public functions]===================================
 void ignitionTask(void)
 {
-    // Turn ignition LED on if all seat and belt sensors are active
-    if ( driverSeat && passengerSeat && driverBelt && passengerBelt ) {
-        ignitionEnabledLED = ON;
+    static bool prevButtonState = false;
+    static int cycleCount = 0;  // Counts push events (rising edges)
+    bool currentButtonState = ignitionButton;  // Read current button state
+
+    // --- When engine is off, update the ignition enabled LED based on seat and belt sensors ---
+    if (engineState == OFF) {
+        if (driverSeat && passengerSeat && driverBelt && passengerBelt) {
+            ignitionEnabledLED = ON;   // Green LED on when conditions met
+        } else {
+            ignitionEnabledLED = OFF;
+        }
     }
 
-    // If ignition is enabled and the ignition button is pressed,
-    // start the engine (engine LED on) and disable ignition LED.
-    if ( ignitionEnabledLED && ignitionButton ) {
-        engineLED = ON;
-        engineState = ON;
-        ignitionEnabledLED = OFF;
-        ignitionLEDState = ON;
+    // --- Rising Edge: Button pressed ---
+    if (!prevButtonState && currentButtonState) {
+        cycleCount++;  // Count every press
+
+        if (engineState == OFF) {
+            if (ignitionEnabledLED) {
+                // Conditions met: start engine on first push.
+                engineLED = ON;           // Blue LED on
+                engineState = ON;         // Engine running
+                ignitionEnabledLED = OFF; // Turn off green LED
+                ignitionLEDState = ON;
+            } else {
+                // Conditions NOT met: trigger alarm.
+                if (alarmON == OFF) {
+                    sirenPin.output();
+                    sirenPin = LOW;
+                    alarmON = ON;
+                    // Optionally, send error messages via UART here.
+                }
+                // Reset cycleCount so that a failed start does not count as a push–release cycle.
+                cycleCount = 0;
+            }
+        }
     }
 
-    // If the engine LED is on, update the engine state and configure the siren pin.
-    if ( engineLED ) {
-        engineOn = ON;
-        ignitionLEDState = ON;
-        sirenPin.input();
+    // --- Falling Edge: Button released ---
+    if (prevButtonState && !currentButtonState) {
+        // If the engine is running and this is the second complete push–release cycle, stop the engine.
+        if ((engineState == ON) && (cycleCount == 2)) {
+            engineLED = OFF;       // Turn off blue LED
+            engineState = OFF;     // Mark engine as off
+            engineOn = OFF;
+            ignitionLEDState = OFF;
+            cycleCount = 0;        // Reset for next cycle
+        }
     }
 
-    // If ignition is not enabled, but the ignition button is pressed and
-    // no engine or alarm is active, then sound the buzzer.
-    if ( !ignitionEnabledLED && ignitionButton && (alarmON == OFF) && !ignitionLEDState ) {
-        sirenPin.output();
-        sirenPin = LOW;
-        alarmON = ON;
-    }
+    // Save the current button state for next iteration.
+    prevButtonState = currentButtonState;
 }
+
 
 //=====[Implementations of private functions]==================================
 // (No private functions)

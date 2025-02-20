@@ -15,7 +15,8 @@ extern DigitalOut ignitionEnabledLED;
 extern DigitalOut engineLED;
 
 // Analog input
-extern AnalogIn potentiometer;
+extern AnalogIn potentiometer1;
+extern AnalogIn delaySelector;
 
 // Digital in/out
 extern DigitalInOut sirenPin;

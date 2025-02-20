@@ -14,9 +14,6 @@ using namespace std::chrono;
 static char currentWiperMode[5] = "OFF";     // Valid modes: "OFF", "LO", "INT", "HI"
 static char currentDelaySetting[8] = "MEDIUM"; // Valid settings: "SHORT", "MEDIUM", "LONG"
 
-// Analog input for the intermittent delay time selector (assumed on A1)
-static AnalogIn delaySelector(A1);
-
 // Timer for periodic UI updates
 static Timer uiTimer;
 
@@ -80,7 +77,7 @@ const char* getDelaySetting(void)
 // Reads the potentiometer value (0.0 to 1.0) and maps it to a wiper mode.
 static void updateWiperMode(void)
 {
-    float value = potentiometer.read();
+    float value = potentiometer1.read();
     
     if (value < 0.25f) {
         ui_strcpy(currentWiperMode, "OFF");
